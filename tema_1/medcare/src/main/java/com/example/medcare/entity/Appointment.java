@@ -20,7 +20,7 @@ public class Appointment {
     private String patientName;
     @ManyToOne
     @JoinColumn(name = "doctors_id")
-    private Doctor doctor;
+    private Doctor doctors;
     @Column(name = "date_", nullable = false)
     private Date date_;
     @ManyToOne
