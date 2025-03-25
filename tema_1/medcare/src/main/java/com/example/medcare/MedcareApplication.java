@@ -38,7 +38,7 @@ public class MedcareApplication {
     }
 
 
-    @Bean
+//    @Bean
     public CommandLineRunner commandLineRunner(UserDAO userDAO, ScheduleDAO scheduleDAO, DoctorDAO doctorDAO) {
         return runner -> {
 //			createUser(userDAO);
