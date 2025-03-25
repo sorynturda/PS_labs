@@ -39,7 +39,7 @@ public class ScheduleDAOImpl implements ScheduleDAO {
 
     @Override
     public List<Schedule> findByDoctor(Doctor doctor) {
-        TypedQuery<Schedule> query=entityManager.createQuery("FROM Schedule where doctors=:doctor", Schedule.class);
+        TypedQuery<Schedule> query=entityManager.createQuery("FROM Schedule where doctor=:doctor", Schedule.class);
         query.setParameter("doctor", doctor);
         return query.getResultList();
 

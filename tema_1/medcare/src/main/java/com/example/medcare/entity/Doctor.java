@@ -1,9 +1,6 @@
 package com.example.medcare.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +25,7 @@ public class Doctor {
     @Column(name = "specialization", nullable = false)
     private String specialization;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "id", cascade = CascadeType.PERSIST)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "doctor", cascade = CascadeType.PERSIST)
     private List<Schedule> schedules = new ArrayList<>();
 
     public int getId() {

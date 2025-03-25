@@ -9,8 +9,6 @@ import java.sql.Time;
 
 @Entity
 @Table(name = "schedules")
-@Data
-@AllArgsConstructor
 public class Schedule {
     public Schedule(){}
     public Schedule(Doctor doctor, String dayOfTheWeek, Time startTime, Time endTime) {

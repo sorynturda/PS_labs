@@ -49,10 +49,4 @@ public class DoctorDAOImpl implements DoctorDAO{
         return entityManager.find(Doctor.class, id);
     }
 
-    @Override
-    public String toString() {
-        return "DoctorDAOImpl{" +
-                "entityManager=" + entityManager +
-                '}';
-    }
 }
