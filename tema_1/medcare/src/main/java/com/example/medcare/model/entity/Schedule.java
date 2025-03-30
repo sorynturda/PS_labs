@@ -29,6 +29,46 @@ public class Schedule {
     @Column(name = "end_time", nullable = false)
     private Time endTime;
 
+    public int getId() {
+        return id;
+    }
+
+    public Doctor getDoctor() {
+        return doctor;
+    }
+
+    public String getDayOfTheWeek() {
+        return dayOfTheWeek;
+    }
+
+    public Time getStartTime() {
+        return startTime;
+    }
+
+    public Time getEndTime() {
+        return endTime;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
+    }
+
+    public void setDayOfTheWeek(String dayOfTheWeek) {
+        this.dayOfTheWeek = dayOfTheWeek;
+    }
+
+    public void setStartTime(Time startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(Time endTime) {
+        this.endTime = endTime;
+    }
+
     @Override
     public String toString() {
         return "Schedule{" +

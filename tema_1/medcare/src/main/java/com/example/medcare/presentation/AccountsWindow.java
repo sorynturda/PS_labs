@@ -27,6 +27,7 @@ public class AccountsWindow extends JFrame {
         accountsTable = new JTable(tableModel);
         add(new JScrollPane(accountsTable), BorderLayout.CENTER);
         populateTable();
+        setLocationRelativeTo(null);
 
         // Panel for adding new user
         JPanel formPanel = new JPanel(new GridLayout(5, 2));

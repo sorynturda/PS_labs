@@ -10,5 +10,6 @@ public interface ScheduleDAO {
     void update(Schedule schedule);
     void delete(int id);
     List<Schedule> findByDoctor(Doctor doctor);
+    Schedule findById(int id);
 
 }

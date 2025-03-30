@@ -13,6 +13,7 @@ import java.util.List;
 @Repository
 public class ScheduleDAOImpl implements ScheduleDAO {
     private EntityManager entityManager;
+
     @Autowired
     public ScheduleDAOImpl(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -38,10 +39,17 @@ public class ScheduleDAOImpl implements ScheduleDAO {
     }
 
     @Override
+    public Schedule findById(int id) {
+        return entityManager.find(Schedule.class, id);
+    }
+
+    @Override
     public List<Schedule> findByDoctor(Doctor doctor) {
-        TypedQuery<Schedule> query=entityManager.createQuery("FROM Schedule where doctor=:doctor", Schedule.class);
+        TypedQuery<Schedule> query = entityManager.createQuery("FROM Schedule where doctor=:doctor", Schedule.class);
         query.setParameter("doctor", doctor);
         return query.getResultList();
 
     }
+
+
 }

@@ -40,7 +40,7 @@ public class MedcareApplication {
 //    @Bean
     public CommandLineRunner commandLineRunner(UserDAO userDAO, ScheduleDAO scheduleDAO, DoctorDAO doctorDAO, UserService userService) {
         return runner -> {
-			userService.createUser("sorin", "sorin", "sss");
+			userService.createUser("sorin", "sss", "sss");
 //			createDoctor(doctorDAO);
 //            createSchedule(scheduleDAO, doctorDAO);
 //			findDoctor(doctorDAO);
