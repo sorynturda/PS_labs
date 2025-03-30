@@ -63,6 +63,9 @@ public class AccountsWindow extends JFrame {
             if (!name.isEmpty() && !username.isEmpty() && !password.isEmpty()) {
                 try {
                     userService.createUser(name, username, password);
+                    nameField.setText("");
+                    usernameField.setText("");
+                    passwordField.setText("");
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
                 }

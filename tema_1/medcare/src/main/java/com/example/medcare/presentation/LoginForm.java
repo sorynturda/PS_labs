@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 
 import com.example.medcare.model.entity.User;
+import com.example.medcare.service.DoctorService;
+import com.example.medcare.service.MedicalServiceService;
 import com.example.medcare.service.UserService;
 import com.example.medcare.util.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +16,15 @@ import java.util.Optional;
 
 @Component
 public class LoginForm extends JFrame {
+    private final MedicalServiceService medicalServiceService;
     private JTextField usernameField;
     private JPasswordField passwordField;
     private UserService userService;
-
+    private DoctorService doctorService;
     @Autowired
-    public LoginForm(UserService userService) {
+    public LoginForm(UserService userService, DoctorService doctorService, MedicalServiceService medicalServiceService) {
         this.userService = userService;
+        this.doctorService = doctorService;
 
         setTitle("Login");
         setSize(300, 200);
@@ -40,6 +44,7 @@ public class LoginForm extends JFrame {
         add(loginButton);
 
         setVisible(true);
+        this.medicalServiceService = medicalServiceService;
     }
 
     private void loginUser() {
@@ -53,7 +58,7 @@ public class LoginForm extends JFrame {
             JOptionPane.showMessageDialog(this, "Login successful!");
             this.dispose();
             if (user.getRole_().equals(UserRole.ADMIN.toString())) {
-                new AdminWindow(userService);
+                new AdminWindow(userService, doctorService, medicalServiceService);
             } else {
                 new ReceptionistWindow();
             }
