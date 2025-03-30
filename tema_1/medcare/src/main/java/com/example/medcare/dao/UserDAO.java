@@ -1,6 +1,6 @@
 package com.example.medcare.dao;
 
-import com.example.medcare.entity.User;
+import com.example.medcare.model.entity.User;
 
 import java.util.List;
 
@@ -10,4 +10,5 @@ public interface UserDAO {
     void update(User user);
     List<User> findAll();
     User findById(int id);
+    User findByUsername(String username);
 }

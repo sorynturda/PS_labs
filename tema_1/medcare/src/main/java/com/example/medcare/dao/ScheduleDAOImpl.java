@@ -1,7 +1,7 @@
 package com.example.medcare.dao;
 
-import com.example.medcare.entity.Doctor;
-import com.example.medcare.entity.Schedule;
+import com.example.medcare.model.entity.Doctor;
+import com.example.medcare.model.entity.Schedule;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;

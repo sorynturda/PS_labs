@@ -1,4 +1,4 @@
-package com.example.medcare.entity;
+package com.example.medcare.model.entity;
 
 import jakarta.persistence.*;
 
@@ -8,7 +8,9 @@ import java.util.List;
 @Entity
 @Table(name = "doctors")
 public class Doctor {
-    public Doctor(){};
+    public Doctor() {
+    }
+
     public Doctor(String name, String specialization) {
         this.name = name;
         this.specialization = specialization;
@@ -25,8 +27,12 @@ public class Doctor {
     @Column(name = "specialization", nullable = false)
     private String specialization;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "doctor", cascade = CascadeType.PERSIST)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "doctor",
+            cascade = {CascadeType.PERSIST,
+                    CascadeType.REFRESH})
     private List<Schedule> schedules = new ArrayList<>();
+    @OneToMany(mappedBy = "doctor")
+    private List<Appointment> appointments;
 
     public int getId() {
         return id;

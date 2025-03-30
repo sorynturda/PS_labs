@@ -1,6 +1,6 @@
 package com.example.medcare.dao;
 
-import com.example.medcare.entity.Doctor;
+import com.example.medcare.model.entity.Doctor;
 
 import java.util.List;
 

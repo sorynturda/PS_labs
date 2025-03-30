@@ -1,4 +1,4 @@
-package com.example.medcare.entity;
+package com.example.medcare.model.entity;
 
 import com.example.medcare.util.UserRole;
 import jakarta.persistence.*;

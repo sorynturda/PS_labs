@@ -1,7 +1,6 @@
 package com.example.medcare.dao;
 
-import com.example.medcare.entity.User;
-import jakarta.persistence.Entity;
+import com.example.medcare.model.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Repository
-public class UserDAOImpl implements UserDAO{
+public class UserDAOImpl implements UserDAO {
 
     private EntityManager entityManager;
 
     @Autowired
-    public UserDAOImpl(EntityManager entityManager){
-        this.entityManager=entityManager;
+    public UserDAOImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -48,5 +47,12 @@ public class UserDAOImpl implements UserDAO{
     @Override
     public User findById(int id) {
         return entityManager.find(User.class, id);
+    }
+
+    @Override
+    public User findByUsername(String username) {
+        TypedQuery<User> query = entityManager.createQuery("FROM User where username=:username", User.class);
+        query.setParameter("username", username);
+        return query.getSingleResult();
     }
 }
