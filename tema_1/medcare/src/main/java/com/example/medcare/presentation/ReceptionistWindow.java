@@ -2,6 +2,7 @@ package com.example.medcare.presentation;
 
 import com.example.medcare.model.entity.*;
 import com.example.medcare.service.*;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -77,8 +78,8 @@ public class ReceptionistWindow extends JFrame {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("New Appointment"),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+                BorderFactory.createTitledBorder("New Appointment"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
         // Patient information section
         JPanel patientPanel = new JPanel(new GridBagLayout());
@@ -119,7 +120,7 @@ public class ReceptionistWindow extends JFrame {
         doctorComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                         boolean isSelected, boolean cellHasFocus) {
+                                                          boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof Doctor) {
                     setText(((Doctor) value).getName());
@@ -140,7 +141,7 @@ public class ReceptionistWindow extends JFrame {
         serviceComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                         boolean isSelected, boolean cellHasFocus) {
+                                                          boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof MedicalService) {
                     setText(((MedicalService) value).getName());
@@ -200,23 +201,11 @@ public class ReceptionistWindow extends JFrame {
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         clearButton = new JButton("Clear Form");
-        // Only use icons if they actually exist
-        try {
-            clearButton.setIcon(new ImageIcon(getClass().getResource("/icons/clear.png")));
-        } catch (Exception e) {
-            // Ignore if icon doesn't exist
-        }
         saveButton = new JButton("Save Appointment");
-        try {
-            saveButton.setIcon(new ImageIcon(getClass().getResource("/icons/save.png")));
-        } catch (Exception e) {
-            // Ignore if icon doesn't exist
-        }
         buttonPanel.add(clearButton);
         buttonPanel.add(saveButton);
         formPanel.add(buttonPanel);
 
-        // Add some spacing at the bottom
         formPanel.add(Box.createVerticalGlue());
 
         return formPanel;
@@ -245,23 +234,8 @@ public class ReceptionistWindow extends JFrame {
         // Add table control buttons
         JPanel tableButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         refreshButton = new JButton("Refresh");
-        try {
-            refreshButton.setIcon(new ImageIcon(getClass().getResource("/icons/refresh.png")));
-        } catch (Exception e) {
-            // Ignore if icon doesn't exist
-        }
         JButton editButton = new JButton("Edit");
-        try {
-            editButton.setIcon(new ImageIcon(getClass().getResource("/icons/edit.png")));
-        } catch (Exception e) {
-            // Ignore if icon doesn't exist
-        }
         JButton deleteButton = new JButton("Delete");
-        try {
-            deleteButton.setIcon(new ImageIcon(getClass().getResource("/icons/delete.png")));
-        } catch (Exception e) {
-            // Ignore if icon doesn't exist
-        }
 
         tableButtonPanel.add(refreshButton);
         tableButtonPanel.add(editButton);
@@ -291,13 +265,13 @@ public class ReceptionistWindow extends JFrame {
     private void refreshAppointmentsTable() {
         tableModel.setRowCount(0);
         appointmentService.getAllAppointments().forEach(appointment -> tableModel.addRow(new Object[]{
-            appointment.getId(),
-            appointment.getPatientName(),
-            appointment.getDoctor().getName(),
-            appointment.getService().getName(),
-            appointment.getDate_(),
-            appointment.getTime(),
-            appointment.getStatus()
+                appointment.getId(),
+                appointment.getPatientName(),
+                appointment.getDoctor().getName(),
+                appointment.getService().getName(),
+                appointment.getDate_(),
+                appointment.getTime(),
+                appointment.getStatus()
         }));
     }
 
@@ -312,8 +286,9 @@ public class ReceptionistWindow extends JFrame {
         // Add listener for table selection
         appointmentsTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && appointmentsTable.getSelectedRow() != -1) {
-                // Enable edit and delete buttons when a row is selected
-                // This would be implemented in the full version
+                Object id = tableModel.getValueAt(appointmentsTable.getSelectedRow(), 0);
+                appointmentService.removeAppointment((Integer) id);
+                refreshAppointmentsTable();
             }
         });
     }
@@ -359,8 +334,8 @@ public class ReceptionistWindow extends JFrame {
 
         Time appointmentTime = new Time(time.getTime());
         return schedules.stream().anyMatch(schedule ->
-            appointmentTime.after(schedule.getStartTime()) &&
-            appointmentTime.before(schedule.getEndTime()));
+                appointmentTime.after(schedule.getStartTime()) &&
+                        appointmentTime.before(schedule.getEndTime()));
     }
 
     private void checkDoctorAvailability() {

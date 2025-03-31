@@ -18,6 +18,11 @@ public class AppointmentDAOImpl implements AppointmentDAO{
     }
 
     @Override
+    public Appointment findById(int id) {
+        return entityManager.find(Appointment.class, id);
+    }
+
+    @Override
     @Transactional
     public void save(Appointment appointment) {
         entityManager.persist(appointment);

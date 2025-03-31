@@ -4,7 +4,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.Time;
+import java.time.DayOfWeek;
+import java.util.Arrays;
 import java.util.List;
+
 import com.example.medcare.model.entity.Schedule;
 import com.example.medcare.service.ScheduleService;
 
@@ -71,10 +74,10 @@ public class ScheduleWindow extends JFrame {
         List<Schedule> schedules = scheduleService.getSchedulesByDoctorId(doctorId);
         for (Schedule schedule : schedules) {
             tableModel.addRow(new Object[]{
-                schedule.getId(),
-                schedule.getDayOfTheWeek(),
-                schedule.getStartTime(),
-                schedule.getEndTime()
+                    schedule.getId(),
+                    schedule.getDayOfTheWeek(),
+                    schedule.getStartTime(),
+                    schedule.getEndTime()
             });
         }
     }
@@ -97,10 +100,15 @@ public class ScheduleWindow extends JFrame {
             String dayOfTheWeek = dayField.getText();
             String startTime = startTimeField.getText();
             String endTime = endTimeField.getText();
-            try {
-                scheduleService.addSchedule(doctorId, dayOfTheWeek, Time.valueOf(startTime), Time.valueOf(endTime));
-            } catch (Exception e) {
-                throw new Exception("Please fill the fields with valid values!  ");
+            System.out.println(Arrays.stream(DayOfWeek.values()).map(Enum::toString).toList());
+            if (!Arrays.stream(DayOfWeek.values()).map(String::valueOf).toList().contains(dayOfTheWeek.toUpperCase().trim()))
+                JOptionPane.showMessageDialog(this, "It's not a valid day", "Error", JOptionPane.ERROR_MESSAGE);
+            else {
+                try {
+                    scheduleService.addSchedule(doctorId, dayOfTheWeek, Time.valueOf(startTime), Time.valueOf(endTime));
+                } catch (Exception e) {
+                    throw new Exception("Please fill the fields with valid values!  ");
+                }
             }
             loadScheduleData();
         }
