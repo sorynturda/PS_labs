@@ -5,10 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 import com.example.medcare.model.entity.User;
-import com.example.medcare.service.DoctorService;
-import com.example.medcare.service.MedicalServiceService;
-import com.example.medcare.service.ScheduleService;
-import com.example.medcare.service.UserService;
+import com.example.medcare.service.*;
 import com.example.medcare.util.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,6 +18,7 @@ public class LoginForm extends JFrame {
     private final DoctorService doctorService;
     private final MedicalServiceService medicalServiceService;
     private final ScheduleService scheduleService;
+    private final AppointmentService appointmentService;
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -28,12 +26,12 @@ public class LoginForm extends JFrame {
     private JButton cancelButton;
 
     @Autowired
-    public LoginForm(UserService userService, DoctorService doctorService, MedicalServiceService medicalServiceService, ScheduleService scheduleService) {
+    public LoginForm(UserService userService, DoctorService doctorService, MedicalServiceService medicalServiceService, ScheduleService scheduleService, AppointmentService appointmentService) {
         this.userService = userService;
         this.doctorService = doctorService;
         this.medicalServiceService = medicalServiceService;
         this.scheduleService = scheduleService;
-
+        this.appointmentService = appointmentService;
         initializeUI();
         setupActionListeners();
     }
@@ -113,10 +111,10 @@ public class LoginForm extends JFrame {
         // Cancel button action
         cancelButton.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to exit?",
-                "Confirm Exit",
-                JOptionPane.YES_NO_OPTION
+                    this,
+                    "Are you sure you want to exit?",
+                    "Confirm Exit",
+                    JOptionPane.YES_NO_OPTION
             );
 
             if (result == JOptionPane.YES_OPTION) {
@@ -135,10 +133,10 @@ public class LoginForm extends JFrame {
 
         if (username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(
-                this,
-                "Please enter both username and password",
-                "Input Error",
-                JOptionPane.WARNING_MESSAGE
+                    this,
+                    "Please enter both username and password",
+                    "Input Error",
+                    JOptionPane.WARNING_MESSAGE
             );
             return;
         }
@@ -148,10 +146,10 @@ public class LoginForm extends JFrame {
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             JOptionPane.showMessageDialog(
-                this,
-                "Login successful!",
-                "Success",
-                JOptionPane.INFORMATION_MESSAGE
+                    this,
+                    "Login successful!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
             );
 
             this.dispose();
@@ -159,14 +157,14 @@ public class LoginForm extends JFrame {
             if (user.getRole_().equals(UserRole.ADMIN.toString())) {
                 new AdminWindow(userService, doctorService, medicalServiceService, scheduleService);
             } else {
-                new ReceptionistWindow();
+                new ReceptionistWindow(appointmentService, doctorService, medicalServiceService, scheduleService);
             }
         } else {
             JOptionPane.showMessageDialog(
-                this,
-                "Invalid username or password!",
-                "Authentication Error",
-                JOptionPane.ERROR_MESSAGE
+                    this,
+                    "Invalid username or password!",
+                    "Authentication Error",
+                    JOptionPane.ERROR_MESSAGE
             );
 
             // Clear password field but keep username

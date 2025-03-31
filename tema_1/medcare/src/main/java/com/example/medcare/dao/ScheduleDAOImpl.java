@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.util.List;
 
 @Repository
@@ -41,6 +42,15 @@ public class ScheduleDAOImpl implements ScheduleDAO {
     @Override
     public Schedule findById(int id) {
         return entityManager.find(Schedule.class, id);
+    }
+
+
+    @Override
+    public List<Schedule> findByDoctorAndDay(Doctor doctor, DayOfWeek day) {
+        TypedQuery<Schedule> query=entityManager.createQuery("FROM Schedule where doctor=:doctor and dayOfTheWeek=:day", Schedule.class);
+        query.setParameter("doctor", doctor);
+        query.setParameter("day", day.toString().toLowerCase());
+        return query.getResultList();
     }
 
     @Override

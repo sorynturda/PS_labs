@@ -65,4 +65,10 @@ public class ScheduleService {
         schedule.setEndTime(endTime);
         scheduleDAO.update(schedule);
     }
+
+    public List<Schedule> getScheduleByDoctorAndDay(int id, int dayOfWeek) {
+        DayOfWeek day = DayOfWeek.of(dayOfWeek);
+        Doctor doctor = doctorDAO.findById(id);
+        return scheduleDAO.findByDoctorAndDay(doctor, day);
+    }
 }
