@@ -15,7 +15,12 @@ import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -63,12 +68,62 @@ public class AppointmentService {
         return true;
     }
 
-    public void updateAppointment(Integer id, String status){
+    public void updateAppointment(Integer id, String status) {
         Appointment ap = appointmentDAO.findById(id);
         ap.setStatus(status);
     }
 
     public void removeAppointment(Integer id) {
         appointmentDAO.delete(id);
+    }
+
+    public Map<Doctor, Long> getMostRequestedDoctors(int i, java.util.Date startDate, java.util.Date endDate) {
+        Date sDate = new java.sql.Date(startDate.getTime());
+        Date eDate = new java.sql.Date(endDate.getTime());
+        List<Appointment> appointments = appointmentDAO.findAll()
+                .stream()
+                .filter(ap ->
+                        (ap.getDate_().after(sDate) && ap.getDate_().before(eDate)) || sDate.equals(ap.getDate_()) || eDate.equals(ap.getDate_())).toList();
+
+        Map<Doctor, Long> all = appointments.stream().collect(Collectors.groupingBy(Appointment::getDoctor, Collectors.counting()));
+        return all.entrySet().stream()
+                .sorted(Map.Entry.<Doctor, Long>comparingByValue().reversed())
+                .limit(i)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    public Map<MedicalService, Long> getMostRequestedServices(int i, java.util.Date startDate, java.util.Date endDate) {
+        Date sDate = new java.sql.Date(startDate.getTime());
+        Date eDate = new java.sql.Date(endDate.getTime());
+
+        List<Appointment> appointments = appointmentDAO.findAll()
+                .stream()
+                .filter(ap ->
+                        (ap.getDate_().after(sDate) && ap.getDate_().before(eDate)) || sDate.equals(ap.getDate_()) || eDate.equals(ap.getDate_())).toList();
+
+        Map<MedicalService, Long> all = appointments.stream().collect(Collectors.groupingBy(Appointment::getService, Collectors.counting()));
+        return all.entrySet().stream()
+                .sorted(Map.Entry.<MedicalService, Long>comparingByValue().reversed())
+                .limit(i)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    public List<Appointment> getAppointmentsBetweenDates(java.util.Date startDate, java.util.Date endDate) {
+        Date sDate = new java.sql.Date(startDate.getTime());
+        Date eDate = new java.sql.Date(endDate.getTime());
+
+        return appointmentDAO.findAll().stream().
+                filter(ap ->
+                        (ap.getDate_().after(sDate) && ap.getDate_().before(eDate)) || sDate.equals(ap.getDate_()) || eDate.equals(ap.getDate_())).toList();
     }
 }

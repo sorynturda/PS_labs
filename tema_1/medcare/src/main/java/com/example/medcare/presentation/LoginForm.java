@@ -155,7 +155,7 @@ public class LoginForm extends JFrame {
             this.dispose();
 
             if (user.getRole_().equals(UserRole.ADMIN.toString())) {
-                new AdminWindow(userService, doctorService, medicalServiceService, scheduleService);
+                new AdminWindow(userService, doctorService, medicalServiceService, scheduleService, appointmentService);
             } else {
                 new ReceptionistWindow(appointmentService, doctorService, medicalServiceService, scheduleService);
             }
