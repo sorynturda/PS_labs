@@ -241,6 +241,8 @@ public class ReceptionistWindow extends JFrame {
         tableButtonPanel.add(editButton);
         tableButtonPanel.add(deleteButton);
         tablePanel.add(tableButtonPanel, BorderLayout.NORTH);
+        deleteButton.addActionListener(e -> deleteAppointment());
+        editButton.addActionListener(e -> editStatus());
 
         // Add search panel
         JPanel searchPanel = new JPanel(new BorderLayout());
@@ -254,6 +256,22 @@ public class ReceptionistWindow extends JFrame {
         tablePanel.add(searchPanel, BorderLayout.SOUTH);
 
         return tablePanel;
+    }
+
+    private void editStatus() {
+        if (appointmentsTable.getSelectedRow() != -1) {
+            Object id = tableModel.getValueAt(appointmentsTable.getSelectedRow(), 0);
+            appointmentService.updateAppointment((Integer) id, (String) statusComboBox.getSelectedItem());
+            refreshAppointmentsTable();
+        }
+    }
+
+    private void deleteAppointment() {
+        if (appointmentsTable.getSelectedRow() != -1) {
+            Object id = tableModel.getValueAt(appointmentsTable.getSelectedRow(), 0);
+            appointmentService.removeAppointment((Integer) id);
+            refreshAppointmentsTable();
+        }
     }
 
     private void loadData() {
@@ -286,9 +304,9 @@ public class ReceptionistWindow extends JFrame {
         // Add listener for table selection
         appointmentsTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && appointmentsTable.getSelectedRow() != -1) {
-                Object id = tableModel.getValueAt(appointmentsTable.getSelectedRow(), 0);
-                appointmentService.removeAppointment((Integer) id);
-                refreshAppointmentsTable();
+//                Object id = tableModel.getValueAt(appointmentsTable.getSelectedRow(), 0);
+//                appointmentService.removeAppointment((Integer) id);
+//                refreshAppointmentsTable();
             }
         });
     }

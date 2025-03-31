@@ -48,9 +48,6 @@ public class AppointmentService {
         appointments.forEach(System.out::println);
         LocalTime newStart = time.toLocalTime();
         LocalTime newEnd = newStart.plusMinutes(medicalService.getDurationMinutes());
-        if(appointments.isEmpty())
-            return false;
-
         for (Appointment ap : appointments) {
             LocalTime existingStart = ap.getTime().toLocalTime();
             LocalTime existingEnd = existingStart.plusMinutes(ap.getService().getDurationMinutes());
@@ -64,6 +61,11 @@ public class AppointmentService {
         appointment.setStatus(status);
         appointmentDAO.save(appointment);
         return true;
+    }
+
+    public void updateAppointment(Integer id, String status){
+        Appointment ap = appointmentDAO.findById(id);
+        ap.setStatus(status);
     }
 
     public void removeAppointment(Integer id) {
