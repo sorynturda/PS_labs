@@ -33,4 +33,13 @@ public class MedicalServiceService {
     public List<MedicalService> getAllServices() {
         return medicalServiceDAO.findAll();
     }
+
+    public void updateService(Integer serviceId, String serviceName, Double servicePrice, Integer serviceDuracion) {
+        MedicalService service = new MedicalService();
+        service.setId(serviceId);
+        service.setName(serviceName);
+        service.setPrice(servicePrice);
+        service.setDurationMinutes(serviceDuracion);
+        medicalServiceDAO.update(service);
+    }
 }

@@ -99,7 +99,6 @@ public class ClinicWindow extends JFrame {
         serviceFormPanel.add(createServiceButton);
         serviceFormPanel.add(new JLabel(""));
         serviceFormPanel.add(selectServiceButton);
-
         servicesPanel.add(serviceFormPanel, BorderLayout.SOUTH);
 
         // Add both sections to tables panel
@@ -141,7 +140,6 @@ public class ClinicWindow extends JFrame {
                                              "No Selection", JOptionPane.WARNING_MESSAGE);
             }
         });
-
         // Action listener for creating a medical service
         createServiceButton.addActionListener(e -> {
             String name = serviceNameField.getText();
@@ -169,11 +167,15 @@ public class ClinicWindow extends JFrame {
         selectServiceButton.addActionListener(e -> {
             int selectedRow = servicesTable.getSelectedRow();
             if (selectedRow >= 0) {
-                Long serviceId = (Long) servicesTableModel.getValueAt(selectedRow, 0);
+                Integer serviceId = (Integer) servicesTableModel.getValueAt(selectedRow, 0);
                 String serviceName = (String) servicesTableModel.getValueAt(selectedRow, 1);
+                Double servicePrice = Double.valueOf(servicesTableModel.getValueAt(selectedRow, 2).toString());
+                System.out.println(servicePrice);
+                Integer serviceDuration = Integer.valueOf(servicesTableModel.getValueAt(selectedRow, 3).toString());
+                System.out.println(serviceDuration);
                 JOptionPane.showMessageDialog(this, "Selected service: " + serviceName + " (ID: " + serviceId + ")",
                                              "Service Selected", JOptionPane.INFORMATION_MESSAGE);
-                // bll
+                medicalServiceService.updateService(serviceId, serviceName, servicePrice, serviceDuration);
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a service from the table!",
                                              "No Selection", JOptionPane.WARNING_MESSAGE);
