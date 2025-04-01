@@ -19,13 +19,18 @@ public class MedicalServiceService {
     }
 
     public void createService(String name, double price, int duration) {
+        List<MedicalService> services = getAllServices();
+        for (MedicalService s : services)
+            if (s.getName().equalsIgnoreCase(name))
+                return;
         MedicalService ms = new MedicalService();
-        ms.setName(name);
+        ms.setName(name.trim());
         ms.setPrice(price);
         ms.setDurationMinutes(duration);
         medicalServiceDAO.save(ms);
     }
-    public List<MedicalService> getAllServices(){
+
+    public List<MedicalService> getAllServices() {
         return medicalServiceDAO.findAll();
     }
 }

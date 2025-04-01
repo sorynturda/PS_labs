@@ -250,10 +250,12 @@ public class ReceptionistWindow extends JFrame {
         JTextField searchField = new JTextField();
         searchField.setToolTipText("Search appointments");
         JButton searchButton = new JButton("Search");
-        searchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
+//        searchPanel.add(new JLabel("Search: "), BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(searchButton, BorderLayout.EAST);
         tablePanel.add(searchPanel, BorderLayout.SOUTH);
+        searchField.setVisible(false);
+        searchButton.setVisible(false);
 
         return tablePanel;
     }
