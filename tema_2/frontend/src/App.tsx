@@ -1,82 +1,70 @@
+// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { useAuth } from './contexts/AuthContext';
-import LoginPage from './pages/LoginPage';
+import { AuthProvider } from './context/AuthContext';
+
+// Authentication Pages
+import Login from './pages/auth/Login';
+
+// Admin Pages
+import AdminDashboard from './pages/admin/Dashboard';
+import UserManagement from './pages/admin/UserManagement';
+import DoctorManagement from './pages/admin/DoctorManagement';
+import ServiceManagement from './pages/admin/ServiceManagement';
+import Reports from './pages/admin/Reports';
+
+// Receptionist Pages
+import ReceptionistDashboard from './pages/receptionist/Dashboard';
+import Appointments from './pages/receptionist/Appointments';
+
+// Components
+import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
-import DashboardPage from './pages/admin/DashboardPage';
-import ReceptionistsPage from './pages/admin/ReceptionistsPage';
-import DoctorsPage from './pages/admin/DoctorsPage';
-import ServicesPage from './pages/admin/ServicesPage';
-import ReportsPage from './pages/admin/ReportsPage';
-import AppointmentsPage from './pages/AppointmentsPage';
-import ViewDoctorsPage from './pages/ViewDoctorsPage';
-import ViewServicesPage from './pages/ViewServicesPage';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+// Bootstrap CSS
+import 'bootstrap/dist/css/bootstrap.min.css';
+// Bootstrap Icons
+import 'bootstrap-icons/font/bootstrap-icons.css';
+// Custom CSS
+import './App.css';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: string;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const { isAuthenticated, user } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/" />;
-  }
-
-  return <>{children}</>;
-};
-
-export default function App() {
-  const { isAuthenticated, user } = useAuth();
-
+const App = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
+    <Router>
+      <AuthProvider>
         <Routes>
-          <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* Redirect root to appropriate dashboard or login */}
+          <Route 
+            path="/" 
+            element={
+              <Navigate to="/login" replace />
+            } 
+          />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={isAuthenticated && user?.role === 'ADMIN' ? <Layout /> : <Navigate to="/login" />}>
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="receptionists" element={<ReceptionistsPage />} />
-            <Route path="doctors" element={<DoctorsPage />} />
-            <Route path="services" element={<ServicesPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route index element={<Navigate to="dashboard" replace />} />
+          <Route element={<PrivateRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/doctors" element={<DoctorManagement />} />
+            <Route path="/admin/services" element={<ServiceManagement />} />
+            <Route path="/admin/reports" element={<Reports />} />
           </Route>
-
+          
           {/* Receptionist Routes */}
-          <Route path="/receptionist" element={isAuthenticated && user?.role === 'RECEPTIONIST' ? <Layout /> : <Navigate to="/login" />}>
-            <Route path="appointments" element={<AppointmentsPage />} />
-            <Route path="doctors" element={<ViewDoctorsPage />} />
-            <Route path="services" element={<ViewServicesPage />} />
-            <Route index element={<Navigate to="appointments" replace />} />
+          <Route element={<PrivateRoute allowedRoles={['RECEPTIONIST']} />}>
+            <Route path="/receptionist/dashboard" element={<ReceptionistDashboard />} />
+            <Route path="/receptionist/appointments" element={<Appointments />} />
           </Route>
-
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/receptionist/appointments'} replace />} />
+          
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </Router>
-    </ThemeProvider>
+      </AuthProvider>
+    </Router>
   );
-}
+};
+
+export default App;
