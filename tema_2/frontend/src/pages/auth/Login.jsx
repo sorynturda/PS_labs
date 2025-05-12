@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import AuthService from '../../services/auth.service';
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
+import { handleApiError, logError } from '../../utils/errorHandler';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -26,8 +27,8 @@ const Login = () => {
       const response = await AuthService.login(username, password);
       login(response.user, response.token);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
-      console.error(err);
+      logError(err, 'Login Component');
+      setError(handleApiError(err, 'Failed to login. Please check your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -36,7 +37,7 @@ const Login = () => {
   return (
     <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
       <div className="w-100" style={{ maxWidth: '400px' }}>
-        <Card>
+        <Card className="shadow">
           <Card.Body>
             <h2 className="text-center mb-4">MedCare Login</h2>
             {error && <Alert variant="danger">{error}</Alert>}
@@ -49,6 +50,7 @@ const Login = () => {
                   value={username} 
                   onChange={(e) => setUsername(e.target.value)} 
                   required 
+                  autoComplete="username"
                 />
               </Form.Group>
               
@@ -59,6 +61,7 @@ const Login = () => {
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
+                  autoComplete="current-password"
                 />
               </Form.Group>
               

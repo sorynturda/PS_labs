@@ -36,7 +36,7 @@ const App = () => {
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           
-          {/* Redirect root to appropriate dashboard or login */}
+          {/* Redirect root to login or dashboard based on authentication */}
           <Route 
             path="/" 
             element={

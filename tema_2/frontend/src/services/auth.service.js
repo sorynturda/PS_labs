@@ -1,43 +1,28 @@
-// src/utils/axiosConfig.js
-import axios from 'axios';
+// src/services/auth.service.js
+import axios from '../utils/axiosConfig';
 
-const API_URL = 'http://localhost:8080/api';
-
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
+const AuthService = {
+  login: async (username, password) => {
+    const response = await axios.post('/auth/login', { username, password });
+    return response.data;
   },
-});
-
-// Add a request interceptor
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+  
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+  
+  getCurrentUser: () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      return JSON.parse(userStr);
     }
-    return config;
+    return null;
   },
-  (error) => {
-    return Promise.reject(error);
+  
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
   }
-);
+};
 
-// Add a response interceptor
-axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle 401 Unauthorized errors (token expired)
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default axiosInstance;
+export default AuthService;
