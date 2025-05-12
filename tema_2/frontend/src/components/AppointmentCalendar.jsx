@@ -84,10 +84,12 @@ const AppointmentCalendar = ({ appointments, onViewDetails }) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // Format time from datetime string
+  // Format time from datetime string in 24-hour format
   const formatTime = (dateTimeString) => {
     const date = new Date(dateTimeString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
   };
 
   // Check if a date has appointments
@@ -158,7 +160,8 @@ const AppointmentCalendar = ({ appointments, onViewDetails }) => {
               {date ? (
                 <div
                   className={`border rounded p-2 text-center cursor-pointer ${
-                    selectedDate && date.getDate() === selectedDate.getDate() ? 'bg-primary text-white' : ''
+                    selectedDate && date.getDate() === selectedDate.getDate() && 
+                    date.getMonth() === selectedDate.getMonth() ? 'bg-primary text-white' : ''
                   } ${hasAppointments(date) ? 'border-primary' : ''}`}
                   style={{ cursor: 'pointer', minHeight: '60px' }}
                   onClick={() => setSelectedDate(date)}

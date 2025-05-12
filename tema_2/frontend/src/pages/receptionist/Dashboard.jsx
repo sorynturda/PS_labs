@@ -4,7 +4,7 @@ import { Card, Row, Col, Container, Button, Badge, Table, Form } from 'react-boo
 import { Link, useNavigate } from 'react-router-dom';
 import { LoadingSpinner, AppointmentCalendar, StatusBadge, AppointmentDetail } from '../../components';
 import ReceptionistService from '../../services/receptionist.service';
-import { formatDateTime } from '../../utils/dateUtils';
+import { formatDateTime, parseDuration } from '../../utils/dateUtils';
 import { useAuth } from '../../context/AuthContext';
 
 const ReceptionistDashboard = () => {
@@ -112,7 +112,8 @@ const ReceptionistDashboard = () => {
     const end = new Date(start);
     
     // Calculate end time by adding service duration
-    end.setMinutes(end.getMinutes() + (appointment.service.duration.seconds / 60));
+    const durationMinutes = parseDuration(appointment.service.duration);
+    end.setMinutes(end.getMinutes() + durationMinutes);
     
     // Format dates for calendar URL
     const formatDate = (date) => {
@@ -123,6 +124,15 @@ const ReceptionistDashboard = () => {
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatDate(start)}/${formatDate(end)}&details=${encodeURIComponent(`Doctor: ${appointment.doctor.name}\nPatient: ${appointment.patientName}\nService: ${appointment.service.name}`)}&location=MedCare%20Clinic`;
     
     window.open(url, '_blank');
+  };
+
+  // Format time to 24-hour
+  const formatTime = (date) => {
+    if (!date) return '';
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
   };
 
   // Render status counts with icons
@@ -419,10 +429,7 @@ const ReceptionistDashboard = () => {
                               }}
                             ></div>
                             <div className="text-muted small">
-                              {new Date(appointment.appointmentTime).toLocaleTimeString([], {
-                                hour: '2-digit', 
-                                minute: '2-digit'
-                              })}
+                              {formatTime(new Date(appointment.appointmentTime))}
                             </div>
                             <div className="fw-bold">{appointment.patientName}</div>
                             <div className="small">

@@ -12,8 +12,7 @@ const ServiceManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    duration: '',
-    active: true
+    duration: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -35,6 +34,60 @@ const ServiceManagement = () => {
     fetchServices();
   }, []);
 
+  // Convert ISO-8601 duration format to minutes
+  const parseDuration = (duration) => {
+    if (!duration) return '';
+    
+    // For PT1H30M format
+    if (typeof duration === 'string' && duration.startsWith('PT')) {
+      let minutes = 0;
+      
+      // Extract hours
+      const hoursMatch = duration.match(/(\d+)H/);
+      if (hoursMatch) {
+        minutes += parseInt(hoursMatch[1]) * 60;
+      }
+      
+      // Extract minutes
+      const minutesMatch = duration.match(/(\d+)M/);
+      if (minutesMatch) {
+        minutes += parseInt(minutesMatch[1]);
+      }
+      
+      return minutes.toString();
+    }
+    
+    // For object format
+    if (typeof duration === 'object' && duration.seconds !== undefined) {
+      return Math.floor(duration.seconds / 60).toString();
+    }
+    
+    // For numeric format
+    if (!isNaN(Number(duration))) {
+      return Math.floor(Number(duration) / 60).toString();
+    }
+    
+    return '';
+  };
+  
+  // Convert minutes to ISO-8601 duration format
+  const formatToISODuration = (minutes) => {
+    if (!minutes) return '';
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    let duration = 'PT';
+    if (hours > 0) {
+      duration += `${hours}H`;
+    }
+    if (mins > 0) {
+      duration += `${mins}M`;
+    }
+    
+    return duration;
+  };
+
   const handleClose = () => {
     setShowModal(false);
     setEditMode(false);
@@ -42,36 +95,41 @@ const ServiceManagement = () => {
     setFormData({
       name: '',
       price: '',
-      duration: '',
-      active: true
+      duration: ''
     });
     setError('');
   };
 
   const handleShow = (service = null) => {
     if (service) {
-      // Format duration for the form (convert from seconds to minutes)
-      const durationInMinutes = service.duration.seconds / 60;
+      console.log("Service data:", service);
+      
+      // Convert duration to minutes
+      const durationMinutes = parseDuration(service.duration);
       
       setFormData({
-        name: service.name,
-        price: service.price,
-        duration: durationInMinutes.toString(),
-        active: service.active
+        name: service.name || '',
+        price: service.price || '',
+        duration: durationMinutes
       });
       setEditMode(true);
       setCurrentServiceId(service.id);
     } else {
       setEditMode(false);
+      setFormData({
+        name: '',
+        price: '',
+        duration: ''
+      });
     }
     setShowModal(true);
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
@@ -84,13 +142,14 @@ const ServiceManagement = () => {
     }
     
     try {
-      // Convert duration from minutes to Duration object
+      // Convert minutes to ISO-8601 duration format
+      const isoDuration = formatToISODuration(parseInt(formData.duration));
+      
+      // Create service data for API
       const serviceData = {
-        ...formData,
-        // Convert price to BigDecimal
+        name: formData.name,
         price: parseFloat(formData.price),
-        // Convert minutes to PT format for Duration
-        duration: parseInt(formData.duration) * 60
+        duration: isoDuration
       };
       
       if (editMode) {
@@ -132,10 +191,25 @@ const ServiceManagement = () => {
     }
   };
 
-  // Helper function to format duration from seconds to minutes
-  const formatDuration = (durationObj) => {
-    if (!durationObj) return 'N/A';
-    return `${durationObj.seconds / 60} minutes`;
+  // Format duration for display
+  const formatDuration = (duration) => {
+    if (!duration) return 'Not set';
+    
+    // Convert to minutes
+    const minutes = parseDuration(duration);
+    if (!minutes) return 'Not set';
+    
+    // Format for display
+    const hours = Math.floor(parseInt(minutes) / 60);
+    const mins = parseInt(minutes) % 60;
+    
+    if (hours > 0 && mins > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins > 1 ? 's' : ''}`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      return `${mins} minute${mins > 1 ? 's' : ''}`;
+    }
   };
 
   return (
@@ -160,7 +234,6 @@ const ServiceManagement = () => {
               <th>Name</th>
               <th>Price</th>
               <th>Duration</th>
-              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -172,11 +245,6 @@ const ServiceManagement = () => {
                   <td>{service.name}</td>
                   <td>${service.price}</td>
                   <td>{formatDuration(service.duration)}</td>
-                  <td>
-                    <span className={`badge ${service.active ? 'bg-success' : 'bg-danger'}`}>
-                      {service.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
                   <td>
                     <Button 
                       variant="outline-primary" 
@@ -198,7 +266,7 @@ const ServiceManagement = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center">No services found</td>
+                <td colSpan="5" className="text-center">No services found</td>
               </tr>
             )}
           </tbody>
@@ -248,16 +316,9 @@ const ServiceManagement = () => {
                 onChange={handleChange}
                 required
               />
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                label="Active"
-                name="active"
-                checked={formData.active}
-                onChange={handleChange}
-              />
+              <Form.Text className="text-muted">
+                Enter the duration in minutes (e.g., 90 for 1 hour and 30 minutes)
+              </Form.Text>
             </Form.Group>
             
             <div className="d-flex justify-content-end">

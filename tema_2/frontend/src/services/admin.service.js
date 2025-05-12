@@ -55,20 +55,44 @@ const AdminService = {
     return response.data;
   },
   
+  // Format date to ISO_DATE_TIME
+  formatDateToISODateTime: (dateStr) => {
+    // Ensure we have a valid date string
+    if (!dateStr) return '';
+    
+    // If it's already in ISO format with time, return as is
+    if (dateStr.includes('T')) return dateStr;
+    
+    // Otherwise add time component
+    return `${dateStr}T00:00:00`;
+  },
+  
   // Reports
   getAppointmentsReport: async (startDate, endDate) => {
-    const response = await axios.get(`/admin/reports/appointments?startDate=${startDate}&endDate=${endDate}`);
-    return response.data;
+    const formattedStartDate = AdminService.formatDateToISODateTime(startDate);
+    // For the end date, use end of day
+    const formattedEndDate = endDate ? `${endDate}T23:59:59` : '';
+    
+    const response = await axios.get(`/admin/reports/appointments?startDate=${formattedStartDate}&endDate=${formattedEndDate}`);
+    return response.data.appointments || [];
   },
   
   getDoctorsReport: async (startDate, endDate) => {
-    const response = await axios.get(`/admin/reports/doctors?startDate=${startDate}&endDate=${endDate}`);
-    return response.data;
+    const formattedStartDate = AdminService.formatDateToISODateTime(startDate);
+    // For the end date, use end of day
+    const formattedEndDate = endDate ? `${endDate}T23:59:59` : '';
+    
+    const response = await axios.get(`/admin/reports/doctors?startDate=${formattedStartDate}&endDate=${formattedEndDate}`);
+    return response.data.doctorStats || [];
   },
   
   getServicesReport: async (startDate, endDate) => {
-    const response = await axios.get(`/admin/reports/services?startDate=${startDate}&endDate=${endDate}`);
-    return response.data;
+    const formattedStartDate = AdminService.formatDateToISODateTime(startDate);
+    // For the end date, use end of day
+    const formattedEndDate = endDate ? `${endDate}T23:59:59` : '';
+    
+    const response = await axios.get(`/admin/reports/services?startDate=${formattedStartDate}&endDate=${formattedEndDate}`);
+    return response.data.serviceStats || [];
   }
 };
 

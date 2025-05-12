@@ -1,8 +1,9 @@
 // src/pages/receptionist/Appointments.jsx
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Modal, Form, Alert, Badge, Row, Col, Card, Tab, Tabs } from 'react-bootstrap';
+import { Container, Table, Button, Modal, Form, Alert, Badge, Row, Col, Card, Tab, Tabs, InputGroup } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ReceptionistService from '../../services/receptionist.service';
+import { formatDateTime, parseDuration, isTimeSlotAvailable } from '../../utils/dateUtils';
 
 const Appointments = () => {
   const location = useLocation();
@@ -20,8 +21,11 @@ const Appointments = () => {
     patientName: '',
     doctorId: '',
     serviceId: '',
+    appointmentDate: '',
     appointmentTime: ''
   });
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -50,6 +54,23 @@ const Appointments = () => {
     fetchInitialData();
   }, []);
 
+  // Update selected doctor and service when form changes
+  useEffect(() => {
+    if (formData.doctorId) {
+      const doctor = doctors.find(d => d.id.toString() === formData.doctorId.toString());
+      setSelectedDoctor(doctor);
+    } else {
+      setSelectedDoctor(null);
+    }
+    
+    if (formData.serviceId) {
+      const service = services.find(s => s.id.toString() === formData.serviceId.toString());
+      setSelectedService(service);
+    } else {
+      setSelectedService(null);
+    }
+  }, [formData.doctorId, formData.serviceId, doctors, services]);
+
   // Update URL when tab changes
   useEffect(() => {
     if (activeTab === 'all') {
@@ -65,8 +86,11 @@ const Appointments = () => {
       patientName: '',
       doctorId: '',
       serviceId: '',
+      appointmentDate: '',
       appointmentTime: ''
     });
+    setSelectedDoctor(null);
+    setSelectedService(null);
     setError('');
   };
 
@@ -80,16 +104,65 @@ const Appointments = () => {
     }));
   };
 
+  const validateTimeFormat = (timeString) => {
+    // Validate HH:MM format (24-hour)
+    const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timePattern.test(timeString);
+  };
+
+  const checkTimeSlotAvailability = () => {
+    if (!selectedDoctor || !selectedService || !formData.appointmentDate || !formData.appointmentTime) {
+      return false;
+    }
+
+    // Create a datetime string from the selected date and time
+    const appointmentDateTime = `${formData.appointmentDate}T${formData.appointmentTime}`;
+    
+    // Get the service duration in minutes
+    const serviceDuration = parseDuration(selectedService.duration);
+    
+    // Check if the time slot is available
+    return isTimeSlotAvailable(
+      appointmentDateTime, 
+      selectedDoctor, 
+      appointments, 
+      serviceDuration
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.patientName || !formData.doctorId || !formData.serviceId || !formData.appointmentTime) {
+    if (!formData.patientName || !formData.doctorId || !formData.serviceId || 
+        !formData.appointmentDate || !formData.appointmentTime) {
       setError('All fields are required');
       return;
     }
     
+    // Validate time format
+    if (!validateTimeFormat(formData.appointmentTime)) {
+      setError('Time must be in 24-hour format (HH:MM)');
+      return;
+    }
+    
+    // Check for appointment overlaps
+    if (!checkTimeSlotAvailability()) {
+      setError("This time slot is not available. The doctor is already booked for another appointment or it's outside their working hours.");
+      return;
+    }
+    
     try {
-      await ReceptionistService.createAppointment(formData);
+      // Combine date and time into ISO format
+      const appointmentDateTime = `${formData.appointmentDate}T${formData.appointmentTime}`;
+      
+      const appointmentData = {
+        patientName: formData.patientName,
+        doctorId: formData.doctorId,
+        serviceId: formData.serviceId,
+        appointmentTime: appointmentDateTime
+      };
+      
+      await ReceptionistService.createAppointment(appointmentData);
       handleClose();
       setSuccess('Appointment created successfully');
       
@@ -131,12 +204,6 @@ const Appointments = () => {
     ? appointments 
     : appointments.filter(app => app.status === activeTab);
 
-  // Function to format date and time
-  const formatDateTime = (dateTimeString) => {
-    const date = new Date(dateTimeString);
-    return date.toLocaleString();
-  };
-
   // Helper function to render status badge
   const getStatusBadge = (status) => {
     switch(status) {
@@ -161,6 +228,21 @@ const Appointments = () => {
       default:
         return [];
     }
+  };
+
+  // Generate doctor's working hours info
+  const getDoctorWorkingHours = () => {
+    if (!selectedDoctor) return '';
+    
+    return `Working hours: ${selectedDoctor.startTime.substring(0, 5)} - ${selectedDoctor.endTime.substring(0, 5)}`;
+  };
+
+  // Generate service duration info
+  const getServiceDuration = () => {
+    if (!selectedService) return '';
+    
+    const durationMinutes = parseDuration(selectedService.duration);
+    return `Duration: ${durationMinutes} minutes`;
   };
 
   return (
@@ -276,6 +358,11 @@ const Appointments = () => {
                       </option>
                     ))}
                   </Form.Select>
+                  {selectedDoctor && (
+                    <Form.Text className="text-muted">
+                      {getDoctorWorkingHours()}
+                    </Form.Text>
+                  )}
                 </Form.Group>
               </Col>
               
@@ -295,20 +382,52 @@ const Appointments = () => {
                       </option>
                     ))}
                   </Form.Select>
+                  {selectedService && (
+                    <Form.Text className="text-muted">
+                      {getServiceDuration()}
+                    </Form.Text>
+                  )}
                 </Form.Group>
               </Col>
             </Row>
             
-            <Form.Group className="mb-3">
-              <Form.Label>Appointment Date & Time</Form.Label>
-              <Form.Control
-                type="datetime-local"
-                name="appointmentTime"
-                value={formData.appointmentTime}
-                onChange={handleChange}
-                required
-              />
-            </Form.Group>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Appointment Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    name="appointmentDate"
+                    value={formData.appointmentDate}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Appointment Time (24h)</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      name="appointmentTime"
+                      value={formData.appointmentTime}
+                      onChange={handleChange}
+                      placeholder="HH:MM"
+                      pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+                      required
+                    />
+                    <InputGroup.Text>
+                      <i className="bi bi-clock"></i>
+                    </InputGroup.Text>
+                  </InputGroup>
+                  <Form.Text className="text-muted">
+                    Enter time in 24-hour format (e.g., 14:30 for 2:30 PM)
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
             
             <div className="d-flex justify-content-end">
               <Button variant="secondary" className="me-2" onClick={handleClose}>

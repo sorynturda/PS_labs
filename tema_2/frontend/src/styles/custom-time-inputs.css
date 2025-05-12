@@ -1,0 +1,38 @@
+/* src/styles/custom-time-inputs.css */
+
+/* Force 24-hour display on time inputs */
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  display: none;
+}
+
+/* Hide AM/PM for other browsers */
+input[type="time"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Remove any time picker arrows or icons that might show AM/PM */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  background: none;
+}
+
+/* Specific style for the Bootstrap time fields that might be using a different input */
+.form-control.time-input-24h::-webkit-inner-spin-button,
+.form-control.time-input-24h::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+/* This might be needed for custom time pickers that add AM/PM text */
+.time-meridian,
+.time-am-pm,
+.time-period,
+.react-time-picker__am-pm-button {
+  display: none !important;
+}
+
+/* Force 24-hour format on time pickers that use custom dropdowns */
+.time-picker-dropdown option[value*="AM"],
+.time-picker-dropdown option[value*="PM"] {
+  display: none;
+}

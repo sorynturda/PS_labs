@@ -1,12 +1,11 @@
 // src/pages/admin/DoctorManagement.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Button, Modal, Form, Alert, Card, Badge, Row, Col, InputGroup } from 'react-bootstrap';
-import { FormField, StatusBadge, LoadingSpinner, AlertMessage } from '../../components';
+import { LoadingSpinner, AlertMessage } from '../../components';
 import AdminService from '../../services/admin.service';
 import { formatTime } from '../../utils/dateUtils';
 
 const DoctorManagement = () => {
-  // State management
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -16,14 +15,17 @@ const DoctorManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     specialization: '',
-    startTime: '',
-    endTime: '',
-    active: true
+    startTime: '09:00',
+    endTime: '17:00'
   });
   const [formErrors, setFormErrors] = useState({});
   const [alert, setAlert] = useState({ message: '', type: '' });
 
-  // Fetch doctors from API
+  const validateTimeFormat = (timeString) => {
+    const timePattern = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timePattern.test(timeString);
+  };
+
   const fetchDoctors = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,12 +42,10 @@ const DoctorManagement = () => {
     }
   }, []);
 
-  // Load doctors on component mount
   useEffect(() => {
     fetchDoctors();
   }, [fetchDoctors]);
 
-  // Handle modal close
   const handleClose = () => {
     setShowModal(false);
     setEditMode(false);
@@ -53,49 +53,41 @@ const DoctorManagement = () => {
     setFormData({
       name: '',
       specialization: '',
-      startTime: '',
-      endTime: '',
-      active: true
+      startTime: '09:00',
+      endTime: '17:00'
     });
     setFormErrors({});
   };
 
-  // Handle modal open for creating or editing
   const handleShow = (doctor = null) => {
     if (doctor) {
-      // Edit mode: populate form with doctor data
       setFormData({
         name: doctor.name,
         specialization: doctor.specialization,
-        startTime: doctor.startTime ? doctor.startTime.substring(0, 5) : '',
-        endTime: doctor.endTime ? doctor.endTime.substring(0, 5) : '',
-        active: doctor.active
+        startTime: doctor.startTime ? doctor.startTime.substring(0, 5) : '09:00',
+        endTime: doctor.endTime ? doctor.endTime.substring(0, 5) : '17:00'
       });
       setEditMode(true);
       setCurrentDoctorId(doctor.id);
     } else {
-      // Create mode: reset form
       setEditMode(false);
       setFormData({
         name: '',
         specialization: '',
         startTime: '09:00',
-        endTime: '17:00',
-        active: true
+        endTime: '17:00'
       });
     }
     setShowModal(true);
   };
 
-  // Handle form input changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
     
-    // Clear error for this field when user types
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -104,7 +96,6 @@ const DoctorManagement = () => {
     }
   };
 
-  // Validate form input
   const validateForm = () => {
     const errors = {};
     
@@ -118,10 +109,14 @@ const DoctorManagement = () => {
     
     if (!formData.startTime) {
       errors.startTime = 'Start time is required';
+    } else if (!validateTimeFormat(formData.startTime)) {
+      errors.startTime = 'Start time must be in 24-hour format (HH:MM)';
     }
     
     if (!formData.endTime) {
       errors.endTime = 'End time is required';
+    } else if (!validateTimeFormat(formData.endTime)) {
+      errors.endTime = 'End time must be in 24-hour format (HH:MM)';
     } else if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
       errors.endTime = 'End time must be after start time';
     }
@@ -130,7 +125,6 @@ const DoctorManagement = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -156,14 +150,12 @@ const DoctorManagement = () => {
       handleClose();
       fetchDoctors();
       
-      // Clear alert after 3 seconds
       setTimeout(() => {
         setAlert({ message: '', type: '' });
       }, 3000);
     } catch (err) {
       console.error('Error saving doctor:', err);
       
-      // Handle specific API errors if returned
       if (err.response?.data?.message) {
         setAlert({
           message: err.response.data.message,
@@ -178,7 +170,6 @@ const DoctorManagement = () => {
     }
   };
 
-  // Handle doctor deletion
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
       try {
@@ -189,7 +180,6 @@ const DoctorManagement = () => {
         });
         fetchDoctors();
         
-        // Clear alert after 3 seconds
         setTimeout(() => {
           setAlert({ message: '', type: '' });
         }, 3000);
@@ -203,31 +193,6 @@ const DoctorManagement = () => {
     }
   };
 
-  // Toggle doctor active status
-  const toggleActive = async (doctor) => {
-    try {
-      const updatedDoctor = { ...doctor, active: !doctor.active };
-      await AdminService.updateDoctor(doctor.id, updatedDoctor);
-      fetchDoctors();
-      setAlert({
-        message: `Doctor ${doctor.active ? 'deactivated' : 'activated'} successfully`,
-        type: 'success'
-      });
-      
-      // Clear alert after 3 seconds
-      setTimeout(() => {
-        setAlert({ message: '', type: '' });
-      }, 3000);
-    } catch (err) {
-      console.error('Error updating doctor status:', err);
-      setAlert({
-        message: 'Failed to update doctor status',
-        type: 'danger'
-      });
-    }
-  };
-
-  // Filter doctors based on search query
   const filteredDoctors = doctors.filter(doctor => {
     const lowerCaseQuery = searchQuery.toLowerCase();
     return (
@@ -236,7 +201,6 @@ const DoctorManagement = () => {
     );
   });
   
-  // Sort doctors by name
   const sortedDoctors = [...filteredDoctors].sort((a, b) => 
     a.name.localeCompare(b.name)
   );
@@ -299,7 +263,6 @@ const DoctorManagement = () => {
                     <th>Name</th>
                     <th>Specialization</th>
                     <th>Working Hours</th>
-                    <th>Status</th>
                     <th className="text-center">Actions</th>
                   </tr>
                 </thead>
@@ -319,11 +282,6 @@ const DoctorManagement = () => {
                           )}
                         </td>
                         <td>
-                          <StatusBadge 
-                            status={doctor.active ? 'ACTIVE' : 'INACTIVE'} 
-                          />
-                        </td>
-                        <td>
                           <div className="d-flex justify-content-center gap-2">
                             <Button 
                               variant="outline-primary" 
@@ -332,14 +290,6 @@ const DoctorManagement = () => {
                               title="Edit doctor"
                             >
                               <i className="bi bi-pencil"></i>
-                            </Button>
-                            <Button 
-                              variant={doctor.active ? "outline-warning" : "outline-success"}
-                              size="sm"
-                              onClick={() => toggleActive(doctor)}
-                              title={doctor.active ? "Deactivate doctor" : "Activate doctor"}
-                            >
-                              <i className={`bi ${doctor.active ? "bi-toggle-on" : "bi-toggle-off"}`}></i>
                             </Button>
                             <Button 
                               variant="outline-danger" 
@@ -355,7 +305,7 @@ const DoctorManagement = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center py-4">
+                      <td colSpan="4" className="text-center py-4">
                         {searchQuery ? (
                           <>
                             <i className="bi bi-search me-2"></i>
@@ -392,67 +342,95 @@ const DoctorManagement = () => {
           <Form onSubmit={handleSubmit}>
             <Row>
               <Col md={6}>
-                <FormField
-                  label="Doctor Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={formErrors.name}
-                  required
-                />
+                <Form.Group className="mb-3">
+                  <Form.Label>Doctor Name<span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    isInvalid={!!formErrors.name}
+                    required
+                  />
+                  {formErrors.name && (
+                    <Form.Control.Feedback type="invalid">{formErrors.name}</Form.Control.Feedback>
+                  )}
+                </Form.Group>
               </Col>
               
               <Col md={6}>
-                <FormField
-                  label="Specialization"
-                  name="specialization"
-                  value={formData.specialization}
-                  onChange={handleChange}
-                  error={formErrors.specialization}
-                  required
-                />
+                <Form.Group className="mb-3">
+                  <Form.Label>Specialization<span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="specialization"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                    isInvalid={!!formErrors.specialization}
+                    required
+                  />
+                  {formErrors.specialization && (
+                    <Form.Control.Feedback type="invalid">{formErrors.specialization}</Form.Control.Feedback>
+                  )}
+                </Form.Group>
               </Col>
             </Row>
             
             <Row>
               <Col md={6}>
-                <FormField
-                  label="Start Time"
-                  name="startTime"
-                  type="time"
-                  value={formData.startTime}
-                  onChange={handleChange}
-                  error={formErrors.startTime}
-                  required
-                />
+                <Form.Group className="mb-3">
+                  <Form.Label>Start Time (24h)<span className="text-danger">*</span></Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={handleChange}
+                      placeholder="HH:MM"
+                      pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+                      isInvalid={!!formErrors.startTime}
+                      required
+                    />
+                    <InputGroup.Text>
+                      <i className="bi bi-clock"></i>
+                    </InputGroup.Text>
+                  </InputGroup>
+                  <Form.Text className="text-muted">
+                    Enter time in 24-hour format (e.g., 09:00)
+                  </Form.Text>
+                  {formErrors.startTime && (
+                    <Form.Control.Feedback type="invalid">{formErrors.startTime}</Form.Control.Feedback>
+                  )}
+                </Form.Group>
               </Col>
               
               <Col md={6}>
-                <FormField
-                  label="End Time"
-                  name="endTime"
-                  type="time"
-                  value={formData.endTime}
-                  onChange={handleChange}
-                  error={formErrors.endTime}
-                  required
-                />
+                <Form.Group className="mb-3">
+                  <Form.Label>End Time (24h)<span className="text-danger">*</span></Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      name="endTime"
+                      value={formData.endTime}
+                      onChange={handleChange}
+                      placeholder="HH:MM"
+                      pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+                      isInvalid={!!formErrors.endTime}
+                      required
+                    />
+                    <InputGroup.Text>
+                      <i className="bi bi-clock"></i>
+                    </InputGroup.Text>
+                  </InputGroup>
+                  <Form.Text className="text-muted">
+                    Enter time in 24-hour format (e.g., 17:00)
+                  </Form.Text>
+                  {formErrors.endTime && (
+                    <Form.Control.Feedback type="invalid">{formErrors.endTime}</Form.Control.Feedback>
+                  )}
+                </Form.Group>
               </Col>
             </Row>
-            
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="switch"
-                id="active-switch"
-                label={`Doctor is ${formData.active ? 'active' : 'inactive'}`}
-                name="active"
-                checked={formData.active}
-                onChange={handleChange}
-              />
-              <Form.Text className="text-muted">
-                Inactive doctors won't be available for new appointments
-              </Form.Text>
-            </Form.Group>
             
             <div className="d-flex justify-content-end gap-2 mt-4">
               <Button variant="secondary" onClick={handleClose}>

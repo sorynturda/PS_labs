@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Container, Card, Row, Col, Form, Button, Tab, Tabs, Table, Alert } from 'react-bootstrap';
 import AdminService from '../../services/admin.service';
+import { formatDateTime } from '../../utils/dateUtils';
 
 const Reports = () => {
   const [dateRange, setDateRange] = useState({
@@ -56,6 +57,19 @@ const Reports = () => {
     }
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  // Format date and time for appointment display
+  const formatAppointmentDateTime = (dateTimeString) => {
+    if (!dateTimeString) return '';
+    return formatDateTime(dateTimeString);
+  };
+
   const exportToCsv = () => {
     if (!reportData || reportData.length === 0) return;
     
@@ -66,25 +80,52 @@ const Reports = () => {
         headers = ['ID', 'Patient Name', 'Doctor', 'Service', 'Date', 'Status'];
         break;
       case 'doctors':
-        headers = ['Doctor ID', 'Doctor Name', 'Specialization', 'Appointments Count', 'Total Hours'];
+        headers = ['Doctor', 'Appointment Count'];
         break;
       case 'services':
-        headers = ['Service ID', 'Service Name', 'Usage Count', 'Total Revenue'];
+        headers = ['Service', 'Appointment Count'];
         break;
       default:
         headers = Object.keys(reportData[0]);
     }
     
-    // Map the data to CSV rows
+    // Extract proper fields from data based on report type
     const csvRows = [
       headers.join(','),
       ...reportData.map(row => {
-        const values = headers.map(header => {
-          const value = row[header.toLowerCase().replace(/\s+/g, '')] || '';
-          // Ensure string values with commas are quoted
-          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-        });
-        return values.join(',');
+        let values;
+        
+        switch (reportType) {
+          case 'appointments':
+            values = [
+              row.id,
+              row.patientName,
+              row.doctor ? row.doctor.name : '',
+              row.service ? row.service.name : '',
+              formatDate(row.appointmentTime),
+              row.status
+            ];
+            break;
+          case 'doctors':
+            values = [
+              row.doctor ? row.doctor.name : '',
+              row.appointmentCount
+            ];
+            break;
+          case 'services':
+            values = [
+              row.service ? row.service.name : '',
+              row.appointmentCount
+            ];
+            break;
+          default:
+            values = headers.map(header => row[header.toLowerCase().replace(/\s+/g, '')] || '');
+        }
+        
+        // Ensure string values with commas are quoted
+        return values.map(value => 
+          typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+        ).join(',');
       })
     ];
     
@@ -94,14 +135,14 @@ const Reports = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `${reportType}_report.csv`);
+    link.setAttribute('download', `${reportType}_report_${dateRange.startDate}_to_${dateRange.endDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const renderReportTable = () => {
-    if (!reportData) return null;
+    if (!reportData || reportData.length === 0) return <p className="text-center">No data found for the selected date range.</p>;
     
     switch (reportType) {
       case 'appointments':
@@ -113,27 +154,21 @@ const Reports = () => {
                 <th>Patient Name</th>
                 <th>Doctor</th>
                 <th>Service</th>
-                <th>Date</th>
+                <th>Date & Time</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {reportData.length > 0 ? (
-                reportData.map((appointment, index) => (
-                  <tr key={index}>
-                    <td>{appointment.id}</td>
-                    <td>{appointment.patientName}</td>
-                    <td>{appointment.doctor}</td>
-                    <td>{appointment.service}</td>
-                    <td>{appointment.date}</td>
-                    <td>{appointment.status}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center">No appointments found</td>
+              {reportData.map((appointment, index) => (
+                <tr key={index}>
+                  <td>{appointment.id}</td>
+                  <td>{appointment.patientName}</td>
+                  <td>{appointment.doctor ? appointment.doctor.name : ''}</td>
+                  <td>{appointment.service ? appointment.service.name : ''}</td>
+                  <td>{formatAppointmentDateTime(appointment.appointmentTime)}</td>
+                  <td>{appointment.status}</td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </Table>
         );
@@ -143,29 +178,17 @@ const Reports = () => {
           <Table striped bordered hover responsive>
             <thead>
               <tr>
-                <th>Doctor ID</th>
-                <th>Doctor Name</th>
-                <th>Specialization</th>
+                <th>Doctor</th>
                 <th>Appointments Count</th>
-                <th>Total Hours</th>
               </tr>
             </thead>
             <tbody>
-              {reportData.length > 0 ? (
-                reportData.map((doctor, index) => (
-                  <tr key={index}>
-                    <td>{doctor.id}</td>
-                    <td>{doctor.name}</td>
-                    <td>{doctor.specialization}</td>
-                    <td>{doctor.appointmentsCount}</td>
-                    <td>{doctor.totalHours}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center">No doctor data found</td>
+              {reportData.map((stat, index) => (
+                <tr key={index}>
+                  <td>{stat.doctor ? stat.doctor.name : ''}</td>
+                  <td>{stat.appointmentCount}</td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </Table>
         );
@@ -175,27 +198,17 @@ const Reports = () => {
           <Table striped bordered hover responsive>
             <thead>
               <tr>
-                <th>Service ID</th>
-                <th>Service Name</th>
+                <th>Service</th>
                 <th>Usage Count</th>
-                <th>Total Revenue</th>
               </tr>
             </thead>
             <tbody>
-              {reportData.length > 0 ? (
-                reportData.map((service, index) => (
-                  <tr key={index}>
-                    <td>{service.id}</td>
-                    <td>{service.name}</td>
-                    <td>{service.usageCount}</td>
-                    <td>${service.totalRevenue}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="text-center">No service data found</td>
+              {reportData.map((stat, index) => (
+                <tr key={index}>
+                  <td>{stat.service ? stat.service.name : ''}</td>
+                  <td>{stat.appointmentCount}</td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </Table>
         );
@@ -209,7 +222,7 @@ const Reports = () => {
     <Container className="py-4">
       <h1 className="mb-4">Reports</h1>
       
-      <Card className="mb-4">
+      <Card className="mb-4 shadow-sm">
         <Card.Body>
           <Card.Title>Generate Report</Card.Title>
           
@@ -224,6 +237,7 @@ const Reports = () => {
                   name="startDate"
                   value={dateRange.startDate}
                   onChange={handleDateChange}
+                  max={dateRange.endDate || undefined}
                 />
               </Form.Group>
             </Col>
@@ -236,6 +250,7 @@ const Reports = () => {
                   name="endDate"
                   value={dateRange.endDate}
                   onChange={handleDateChange}
+                  min={dateRange.startDate || undefined}
                 />
               </Form.Group>
             </Col>
@@ -264,11 +279,12 @@ const Reports = () => {
                 {loading ? 'Generating...' : 'Generate Report'}
               </Button>
               
-              {reportData && (
+              {reportData && reportData.length > 0 && (
                 <Button 
                   variant="success" 
                   onClick={exportToCsv}
                 >
+                  <i className="bi bi-download me-2"></i>
                   Export CSV
                 </Button>
               )}
@@ -278,11 +294,11 @@ const Reports = () => {
       </Card>
       
       {reportData && (
-        <Card>
+        <Card className="shadow-sm">
           <Card.Body>
             <Card.Title>{reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report</Card.Title>
             <Card.Subtitle className="mb-3 text-muted">
-              {dateRange.startDate} to {dateRange.endDate}
+              {formatDate(dateRange.startDate)} to {formatDate(dateRange.endDate)}
             </Card.Subtitle>
             
             {renderReportTable()}
