@@ -31,6 +31,62 @@ const AppointmentDetail = ({ show, onHide, appointmentId, onStatusUpdate }) => {
     }
   }, [show, appointmentId]);
 
+    const parseDuration = (duration) => {
+    if (!duration) return '';
+    
+    // For PT1H30M format
+    if (typeof duration === 'string' && duration.startsWith('PT')) {
+      let minutes = 0;
+      
+      // Extract hours
+      const hoursMatch = duration.match(/(\d+)H/);
+      if (hoursMatch) {
+        minutes += parseInt(hoursMatch[1]) * 60;
+      }
+      
+      // Extract minutes
+      const minutesMatch = duration.match(/(\d+)M/);
+      if (minutesMatch) {
+        minutes += parseInt(minutesMatch[1]);
+      }
+      
+      return minutes.toString();
+    }
+    
+    // For object format
+    if (typeof duration === 'object' && duration.seconds !== undefined) {
+      return Math.floor(duration.seconds / 60).toString();
+    }
+    
+    // For numeric format
+    if (!isNaN(Number(duration))) {
+      return Math.floor(Number(duration) / 60).toString();
+    }
+    
+    return '';
+  };
+
+   // Format duration for display
+  const formatDuration = (duration) => {
+    if (!duration) return 'Not set';
+    
+    // Convert to minutes
+    const minutes = parseDuration(duration);
+    if (!minutes) return 'Not set';
+    
+    // Format for display
+    const hours = Math.floor(parseInt(minutes) / 60);
+    const mins = parseInt(minutes) % 60;
+    
+    if (hours > 0 && mins > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins > 1 ? 's' : ''}`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      return `${mins} minute${mins > 1 ? 's' : ''}`;
+    }
+  };
+
   const handleStatusUpdate = async (newStatus) => {
     try {
       await ReceptionistService.updateAppointmentStatus(appointmentId, newStatus);
@@ -109,8 +165,8 @@ const AppointmentDetail = ({ show, onHide, appointmentId, onStatusUpdate }) => {
               <Col md={6}>
                 <h5>Service Information</h5>
                 <p className="mb-1"><strong>Service:</strong> {appointment.service.name}</p>
-                <p><strong>Price:</strong> ${appointment.service.price}</p>
-                <p><strong>Duration:</strong> {appointment.service.duration.seconds / 60} minutes</p>
+                <p><strong>Price:</strong> {appointment.service.price} LEI</p>
+                <p><strong>Duration:</strong> {formatDuration(appointment.service.duration)}</p>
               </Col>
             </Row>
             

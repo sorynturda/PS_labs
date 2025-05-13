@@ -243,7 +243,7 @@ const ServiceManagement = () => {
                 <tr key={service.id}>
                   <td>{service.id}</td>
                   <td>{service.name}</td>
-                  <td>${service.price}</td>
+                  <td>{service.price} LEI</td>
                   <td>{formatDuration(service.duration)}</td>
                   <td>
                     <Button 
@@ -294,7 +294,7 @@ const ServiceManagement = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Price ($)</Form.Label>
+              <Form.Label>Price (LEI)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"

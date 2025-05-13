@@ -378,7 +378,7 @@ const Appointments = () => {
                     <option value="">-- Select Service --</option>
                     {services.map(service => (
                       <option key={service.id} value={service.id}>
-                        {service.name} - ${service.price}
+                        {service.name} - {service.price} LEI
                       </option>
                     ))}
                   </Form.Select>
